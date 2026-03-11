@@ -60,9 +60,8 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-// Real-time WebRTC Signaling and Walkie-Talkie logic
-// Keep track of connected users
-const connectedUsers = new Map(); // Map socket.id -> { username, userId }
+// Map socket.id -> { username, userId }
+const connectedUsers = new Map();
 
 io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
@@ -71,14 +70,11 @@ io.on('connection', (socket) => {
     socket.on('user-joined', (userData) => {
         connectedUsers.set(socket.id, userData);
         console.log(`User ${userData.username} joined.`);
-        
-        // Broadcast to everyone the updated list of users (excluding self if we wanted, but let's send to all)
         io.emit('online-users', Array.from(connectedUsers.values()));
     });
 
-    // WebRTC Signaling
+    // Mesh WebRTC Signaling routing by username
     socket.on('webrtc-offer', ({ targetUsername, offer, callerUsername }) => {
-        // Find target user's socket
         const targetSocketId = [...connectedUsers.entries()].find(([id, user]) => user.username === targetUsername)?.[0];
         if (targetSocketId) {
             io.to(targetSocketId).emit('webrtc-offer', { offer, callerUsername });
@@ -92,30 +88,47 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('ice-candidate', ({ targetUsername, candidate }) => {
+    socket.on('ice-candidate', ({ targetUsername, candidate, senderUsername }) => {
         const targetSocketId = [...connectedUsers.entries()].find(([id, user]) => user.username === targetUsername)?.[0];
         if (targetSocketId) {
-            io.to(targetSocketId).emit('ice-candidate', { candidate });
+            io.to(targetSocketId).emit('ice-candidate', { candidate, senderUsername });
         }
     });
 
-    // Handle Walkie-Talkie Ringing/Calling states
-    socket.on('initiate-call', ({ targetUsername, callerUsername }) => {
-        const targetSocketId = [...connectedUsers.entries()].find(([id, user]) => user.username === targetUsername)?.[0];
-        if (targetSocketId) {
-            io.to(targetSocketId).emit('incoming-call', { callerUsername });
-        }
+    // Group Call Initiation
+    socket.on('initiate-group-call', ({ targetUsernames, callerUsername, groupId, callMode }) => {
+        // Find socket IDs of all target users
+        targetUsernames.forEach(targetUsername => {
+            const targetSocketId = [...connectedUsers.entries()].find(([id, user]) => user.username === targetUsername)?.[0];
+            if (targetSocketId) {
+                // Send the invite with the full participant list so they can mesh connect
+                io.to(targetSocketId).emit('incoming-group-call', { 
+                    callerUsername, 
+                    groupId, 
+                    callMode,
+                    participants: [callerUsername, ...targetUsernames] 
+                });
+            }
+        });
     });
 
-    socket.on('call-ended', ({ targetUsername }) => {
-        const targetSocketId = [...connectedUsers.entries()].find(([id, user]) => user.username === targetUsername)?.[0];
-        if (targetSocketId) {
-            io.to(targetSocketId).emit('call-ended');
-        }
+    socket.on('end-group-call', ({ participants, leaverUsername }) => {
+        // A user ended their participation, notify others to close their peer connection
+        participants.forEach(targetUsername => {
+            if (targetUsername === leaverUsername) return;
+            const targetSocketId = [...connectedUsers.entries()].find(([id, user]) => user.username === targetUsername)?.[0];
+            if (targetSocketId) {
+                io.to(targetSocketId).emit('user-left-group', { leaverUsername });
+            }
+        });
     });
 
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
+        const user = connectedUsers.get(socket.id);
+        if (user) {
+            io.emit('user-left-group', { leaverUsername: user.username });
+        }
         connectedUsers.delete(socket.id);
         io.emit('online-users', Array.from(connectedUsers.values()));
     });
