@@ -12,8 +12,14 @@ export default function Auth({ onLogin }) {
     setError(null);
 
     const endpoint = isLogin ? '/api/login' : '/api/register';
+    
+    // Support local Vite dev server vs production Cloudflare tunnel
+    const baseURL = window.location.hostname === 'localhost' && window.location.port === '5173' 
+        ? 'http://localhost:3001' 
+        : '';
+        
     try {
-      const response = await fetch(`http://localhost:3001${endpoint}`, {
+      const response = await fetch(`${baseURL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })

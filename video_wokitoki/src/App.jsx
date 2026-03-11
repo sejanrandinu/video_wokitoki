@@ -3,9 +3,12 @@ import Auth from './components/Auth';
 import WalkieTalkie from './components/WalkieTalkie';
 import { io } from 'socket.io-client';
 
-const PORT = 3001; // Backend Port
-// Initialize socket. Do not connect automatically.
-const socket = io(`http://localhost:${PORT}`, { 
+// Initialize socket dynamically based on current host (supports proxy/Cloudflare)
+const socketURL = window.location.hostname === 'localhost' && window.location.port === '5173' 
+  ? 'http://localhost:3001' 
+  : undefined; // Default connects to current host
+
+const socket = io(socketURL, { 
   autoConnect: false 
 });
 

@@ -5,10 +5,14 @@ const { Server } = require('socket.io');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('./database');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Serve static React Frontend for deployment
+app.use(express.static(path.join(__dirname, '../dist')));
 
 const server = http.createServer(app);
 
@@ -132,6 +136,11 @@ io.on('connection', (socket) => {
         connectedUsers.delete(socket.id);
         io.emit('online-users', Array.from(connectedUsers.values()));
     });
+});
+
+// Handle client-side routing (Regex works across Express versions)
+app.get(/.*/, (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
 const PORT = 3001;
