@@ -153,7 +153,14 @@ export default function WalkieTalkie({ user, socket, onLogout }) {
     if (!localStreamRef.current) await initLocalMedia();
 
     const pc = new RTCPeerConnection({
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun.services.mozilla.com' },
+        // Tip: For 100% reliability anywhere in the world (especially mobile data), 
+        // you should add a TURN server here. You can get a free one from Metered.ca or Xirsys.
+      ]
     });
     
     peerConnections.current.set(targetUser, pc);
