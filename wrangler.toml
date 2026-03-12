@@ -1,0 +1,5 @@
+name = "video-walkie-talkie"
+pages_build_output_dir = "dist"
+
+[vars]
+# Add env vars here if needed

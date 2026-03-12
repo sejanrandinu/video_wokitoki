@@ -13,17 +13,18 @@ export default function Auth({ onLogin }) {
 
     const endpoint = isLogin ? '/api/login' : '/api/register';
     
-    // Support local Vite dev server vs production Cloudflare tunnel
-    const baseURL = window.location.hostname === 'localhost' && window.location.port === '5173' 
-        ? 'http://localhost:3001' 
-        : '';
-        
     try {
-      const response = await fetch(`${baseURL}${endpoint}`, {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
+
+      // Check if response is JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server returned non-JSON response. Is the server running?");
+      }
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Something went wrong');

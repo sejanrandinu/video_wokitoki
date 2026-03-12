@@ -3,12 +3,8 @@ import Auth from './components/Auth';
 import WalkieTalkie from './components/WalkieTalkie';
 import { io } from 'socket.io-client';
 
-// Initialize socket dynamically based on current host (supports proxy/Cloudflare)
-const socketURL = window.location.hostname === 'localhost' && window.location.port === '5173' 
-  ? 'http://localhost:3001' 
-  : undefined; // Default connects to current host
-
-const socket = io(socketURL, { 
+// Initialize socket (Vite proxy handles connection to port 3001)
+const socket = io({ 
   autoConnect: false 
 });
 
