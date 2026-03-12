@@ -1,5 +1,7 @@
-node_modules
-dist
+**/node_modules
+**/dist
 .git
-database.sqlite
+**/*.sqlite
 package-lock.json
+server/package.json
+server/package-lock.json

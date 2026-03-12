@@ -8,8 +8,7 @@
     "start": "node server/server.js",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "postinstall": "npm run build"
+    "preview": "vite preview"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
