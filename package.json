@@ -2,16 +2,22 @@
   "name": "video_wokitoki",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "server": "node server/server.js",
-    "start-all": "npm run server & npm run dev",
+    "start": "node server/server.js",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "npm run build"
   },
   "dependencies": {
+    "bcrypt": "^6.0.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "socket.io": "^4.8.1",
+    "sqlite3": "^5.1.7",
     "lucide-react": "^0.577.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
